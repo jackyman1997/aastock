@@ -4,6 +4,7 @@ from selenium import webdriver  # main
 from selenium.webdriver import ActionChains  # for click on page
 import json
 import pathlib
+from pyvirtualdisplay import Display
 
 
 class AAstock():
@@ -33,6 +34,11 @@ class AAstock():
             'Turn': '//*[@id="divLabelTurn"]',
             'Vol': '//*[@id="divLabelVol"]'
         }
+        # virture display setup
+        print("starting pyvirtualdisplay")
+        display = Display(visible=0, size=(800, 600))
+        display.start()
+        print("virtualdisplay on")
         # driver setup
         # HACK: find out how to use PyVirtualDisplay to run headless webdriver in server
         # https://unix.stackexchange.com/questions/516212/run-selenium-python-script-without-headless-mode-on-linux-server
@@ -80,6 +86,7 @@ class AAstock():
                 # just to check if it is working
                 print(
                     f"{row} {round(100*(offset+1)/self.chart.size['width'], ndigits=2)}% captured", end='\r')
+        display.stop()
         # data preprocessing, XXX: temporarily codes
         # 1. clean date
         newestDate = raw[-1]['Date']  # last item must be the newere date

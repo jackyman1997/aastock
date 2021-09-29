@@ -25,10 +25,14 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      # install xvfb for 
+      - name: install xvfb
+        run: apt-get install -y xvfb xserver-xephyr tigervnc-standalone-server xfonts-base
+
       # install dependencies
       - name: install dependencies
         run: pip install -r requirements.txt
 
       # Run script
-      - name: Run DynamicChart/AastockScraper.py
-        run: python DynamicChart/AastockScraper.py
+      - name: Run main.py
+        run: python main.py --url 'http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT'
