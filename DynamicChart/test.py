@@ -3,6 +3,7 @@ import datetime
 from selenium import webdriver  # main
 from selenium.webdriver import ActionChains  # for click on page
 import json
+import csv
 import pathlib
 from pyvirtualdisplay import Display
 
@@ -15,8 +16,7 @@ class AAstock(ChromeSetup):
         url: str,
         headless: bool = False,
         filename: str = '',
-        filetype: str = 'json',
-        foldername: str = 'output',
+        filetype: str = 'csv'
     ):
         self.xpaths = {
             'chart': '//*[@id="stockChart_chart_container"]',
@@ -82,8 +82,8 @@ class AAstock(ChromeSetup):
 
         # export
         self._setFilenameAndType(name=filename, filetype=filetype)
-        self._export(item=new, folder=foldername)
-        print(self.filepath)  # for github action get filename
+        self._export(item=new)
+        print(self.gist_filename)  # for github action get filename
 
     def _setFilenameAndType(self, name: str, filetype: str):
         now = datetime.datetime.now()  # name by time now
@@ -132,11 +132,18 @@ class AAstock(ChromeSetup):
         return row
 
     def _export(self, item, folder: str):
-        pathlib.Path(f'./{folder}').mkdir(exist_ok=True)  # create new folder
-        self.filepath = f'./{folder}/{self.filename}.{self.filetype}'
-        with open(self.filepath, 'w') as f:
-            if self.filetype == 'json':
+        # pathlib.Path(f'./{folder}').mkdir(exist_ok=True)  # create new folder
+        # self.filepath = f'./{folder}/{self.filename}.{self.filetype}'
+        self.gist_filename = f'{self.filename}.{self.filetype}'
+        if self.filetype == 'json':
+            with open(self.gist_filename, 'w') as f:
                 f.write(json.dumps(item, indent=1))
-            else: 
-                raise NotImplementedError(
-                    "Please use json, other filetypes are not implemented.")
+        elif self.filetype == 'csv':
+            keys = item[0].keys()
+            with open(self.gist_filename, 'w', newline='') as output_file:
+                dict_writer = csv.DictWriter(output_file, keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(item)
+        else: 
+            raise NotImplementedError(
+                "Please use json, other filetypes are not implemented.")

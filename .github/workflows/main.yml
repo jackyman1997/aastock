@@ -26,25 +26,52 @@ jobs:
       - uses: actions/checkout@v2
 
       # install xvfb
-      - name: install xvfb
+      - name: Install xvfb
         run: sudo apt install -y xvfb
 
       # install dependencies
-      - name: install dependencies
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
       # run main.py
-      - name: run main.py
+      - name: Run main.py
         run: |
           output=$(python main.py --url "http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT" | tail -1)
           echo "::set-output name=filepath::$output" 
         id: run
 
       # send to gist
-      - name: Deploy
+      - name: Send to gist
         uses: exuanbo/actions-deploy-gist@v1
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ secrets.GIST_ID }}
-          gist_file_name: $(date "+%d-%m-%y %H%M").json
+          gist_file_name: ${{ steps.run.outputs.filepath }}
           file_path: ${{ steps.run.outputs.filepath }}
+
+      # send email, there is some overkill security issues that block the login
+      # - name: Send mail
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     # Required mail server address:
+      #     server_address: smtp.gmail.com
+      #     # Required mail server port:
+      #     server_port: 465
+      #     # Optional (recommended): mail server username:
+      #     username: ${{secrets.GMAIL_ADDRESS}}
+      #     # Optional (recommended) mail server password:
+      #     password: ${{secrets.GMAIL_PASSWORD}}
+      #     # Required mail subject:
+      #     subject: aastock results
+      #     # Required recipients' addresses:
+      #     to: jackyman1997@gmail.com
+      #     # Required sender full name (address can be skipped):
+      #     from: automated
+      #     # Optional whether this connection use TLS (default is true if server_port is 465)
+      #     secure: true
+      #     # Optional plain body:
+      #     body: 
+      #     # Optional unsigned/invalid certificates allowance:
+      #     ignore_cert: false
+      #     # Optional attachments:
+      #     attachments: ${{ steps.run.outputs.filepath }}
