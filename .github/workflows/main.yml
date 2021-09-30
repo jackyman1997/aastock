@@ -47,7 +47,7 @@ jobs:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ secrets.GIST_ID }}
           gist_file_name: ${{ steps.run.outputs.filepath }}
-          file_path: ${{ steps.run.outputs.filepath }}
+          file_path: ./${{ steps.run.outputs.filepath }}
 
       # send email, there is some overkill security issues that block the login
       # - name: Send mail
