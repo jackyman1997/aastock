@@ -25,6 +25,21 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      # install xvfb
+      - name: install xvfb
+        run: sudo apt install -y xvfb
+
+      # install dependencies
+      - name: install dependencies
+        run: pip install -r requirements.txt
+
+      # run main.py
+      - name: run main.py
+        run: |
+          output=$(python main.py --url "http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT" | tail -1)
+          echo "::set-output name=filepath::$output" 
+        id: run
+
       # send email
       - name: Send mail
         uses: dawidd6/action-send-mail@v3
@@ -50,4 +65,4 @@ jobs:
           # Optional unsigned/invalid certificates allowance:
           ignore_cert: true
           # Optional attachments:
-          attachments: ./main.py
+          attachments: ${{ steps.run.outputs.filepath }}
