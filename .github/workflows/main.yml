@@ -49,29 +49,29 @@ jobs:
           gist_file_name: ${{ steps.run.outputs.filepath }}
           file_path: ${{ steps.run.outputs.filepath }}
 
-      # send email, there is some overkill security issues that block the login
-      # - name: Send mail
-      #   uses: dawidd6/action-send-mail@v3
-      #   with:
-      #     # Required mail server address:
-      #     server_address: smtp.gmail.com
-      #     # Required mail server port:
-      #     server_port: 465
-      #     # Optional (recommended): mail server username:
-      #     username: ${{secrets.GMAIL_ADDRESS}}
-      #     # Optional (recommended) mail server password:
-      #     password: ${{secrets.GMAIL_PASSWORD}}
-      #     # Required mail subject:
-      #     subject: aastock results
-      #     # Required recipients' addresses:
-      #     to: jackyman1997@gmail.com
-      #     # Required sender full name (address can be skipped):
-      #     from: automated
-      #     # Optional whether this connection use TLS (default is true if server_port is 465)
-      #     secure: true
-      #     # Optional plain body:
-      #     body: 
-      #     # Optional unsigned/invalid certificates allowance:
-      #     ignore_cert: false
-      #     # Optional attachments:
-      #     attachments: ${{ steps.run.outputs.filepath }}
+      send email, there is some overkill security issues that block the login
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          # Required mail server address:
+          server_address: smtp.gmail.com
+          # Required mail server port:
+          server_port: 465
+          # Optional (recommended): mail server username:
+          username: ${{secrets.GMAIL_ADDRESS}}
+          # Optional (recommended) mail server password:
+          password: ${{secrets.GMAIL_PASSWORD}}
+          # Required mail subject:
+          subject: aastock results
+          # Required recipients' addresses:
+          to: jackyman1997@gmail.com
+          # Required sender full name (address can be skipped):
+          from: automated
+          # Optional whether this connection use TLS (default is true if server_port is 465)
+          secure: true
+          # Optional plain body:
+          body: 
+          # Optional unsigned/invalid certificates allowance:
+          ignore_cert: false
+          # Optional attachments:
+          attachments: ${{ steps.run.outputs.filepath }}
