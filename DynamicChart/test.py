@@ -35,7 +35,7 @@ class AAstock(ChromeSetup):
         }
         super().__init__(headless=headless)  # chrome driver setup
 
-        with Display(visible=False, size=(100, 60)) as disp:  # virture display setup
+        with Display(visible=False, size=(800, 600)) as disp:  # virture display setup
 
             with webdriver.Chrome(
                 executable_path=self.chrome_path,
