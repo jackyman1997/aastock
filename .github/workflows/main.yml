@@ -25,10 +25,22 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # build docker image
-      - name: build docker image
-        run: docker build . -t virtualdisplay:1.0 -f Dockerfile --rm
+      # install xvfb
+      - name: install xvfb
+        run: sudo apt install -y xvfb
 
-      # run docker image
-      - name: run docker image
-        run: docker run --name aastock -p 5000:5000 --rm virtualdisplay:1.0
+      # install dependencies
+      - name: install dependencies
+        run: pip install -r requirements.txt
+
+      # run main.py
+      - name: run main.py
+        run: python main.py --url "http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT"
+
+      # # build docker image
+      # - name: build docker image
+      #   run: docker build . -t virtualdisplay:1.0 -f Dockerfile --rm
+
+      # # run docker image
+      # - name: run docker image
+      #   run: docker run --name aastock -p 5000:5000 --rm virtualdisplay:1.0

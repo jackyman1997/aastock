@@ -1,5 +1,5 @@
+from .SeleniumWebDriverSetup import ChromeSetup
 import datetime
-import chromedriver_autoinstaller
 from selenium import webdriver  # main
 from selenium.webdriver import ActionChains  # for click on page
 import json
@@ -7,18 +7,17 @@ import pathlib
 from pyvirtualdisplay import Display
 
 
-class AAstock():
+class AAstock(ChromeSetup):
     ''' only minute data for now '''
 
     def __init__(
         self,
         url: str,
+        headless: bool = False,
         filename: str = '',
         filetype: str = 'json',
         foldername: str = 'output',
-        headless: bool = False
     ):
-        # xpaths, HACK: it would amazing and handy if there exists an AI to find these out
         self.xpaths = {
             'chart': '//*[@id="stockChart_chart_container"]',
             'button_nighttime': '//*[@id="AHFTControl"]/div[2]',
@@ -34,48 +33,34 @@ class AAstock():
             'Turn': '//*[@id="divLabelTurn"]',
             'Vol': '//*[@id="divLabelVol"]'
         }
-        # virture display setup
-        print("starting pyvirtualdisplay")
-        display = Display(visible=0, size=(800, 600))
-        display.start()
-        print("virtualdisplay on")
-        # driver setup
-        # HACK: find out how to use PyVirtualDisplay to run headless webdriver in server
-        # https://unix.stackexchange.com/questions/516212/run-selenium-python-script-without-headless-mode-on-linux-server
-        chromedriver_autoinstaller.install()  # auto install
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument('--ignore-certificate-errors-spki-list')
-        self.options.add_argument('--ignore-ssl-errors')
-        # not working in MacOS X
-        self.options.add_argument('--start-maximized')
-        if headless:
-            self.options.add_argument('--headless')
-        # start main loop
-        with webdriver.Chrome(options=self.options) as self.driver:
-            # start webpage
-            self.driver.get(url)
-            # locate dynamic chart, and get size
+        super().__init__(headless=headless)  # chrome driver setup
+
+        # with Display(visible=False, size=(100, 60)) as disp:  # virture display setup
+
+        with webdriver.Chrome(
+            executable_path=self.chrome_path,
+            options=self.chrome_options) as self.driver:  # start chrome driver
+            self.driver.get(url)  # start webpage
             self.chart = self.driver.find_element_by_xpath(
-                self.xpaths['chart'])
+                self.xpaths['chart'])  # locate dynamic chart, and get size
             print(self.chart.location, self.chart.size)
-            # get the name of this future/stock
-            self.name_of_this = self.driver.find_element_by_xpath(
-                self.xpaths['Name']).text
-            # essential clicks for 1 min data
-            # XXX: here these clicks are mainly for getting 1 min data, how to generalise them is still a mystery
-            try:
+            self.name_of_this = self.driver.find_element_by_xpath( 
+                self.xpaths['Name']).text  # get the name of this future/stock
+
+            try:  # clicks for ignore night data
                 self._click(self.xpaths['button_nighttime'])
             except:
                 pass
+
+            # clicks for getting 1 min period
             self._click(self.xpaths['button_1min'])
             self._click(self.xpaths['button_zoomout'], n_times=10)
             self._click(self.xpaths['button_zoomin'])
-            # move and capture
-            # ActionChains(self.driver).move_to_element(self.chart).perform()
             self.driver.execute_script(
-                f'window.scrollTo(0, {self.chart.location["y"]})')
-            raw = []
+                f'window.scrollTo(0, {self.chart.location["y"]})') # move and capture
+
             # traverse through the width of the dynamic chart
+            raw = []
             for offset in range(self.chart.size['width']):
                 self._moveCursor(offset)
                 row = self._captureData()
@@ -86,7 +71,7 @@ class AAstock():
                 # just to check if it is working
                 print(
                     f"{row} {round(100*(offset+1)/self.chart.size['width'], ndigits=2)}% captured", end='\r')
-        display.stop()
+
         # data preprocessing, XXX: temporarily codes
         # 1. clean date
         newestDate = raw[-1]['Date']  # last item must be the newere date
@@ -97,20 +82,18 @@ class AAstock():
         # 3. check sum, for future -> 377 elements in list, for stocks -> 330
         if len(new) != 377 and len(new) != 330:
             print(f'some data is missing, {len(new)}')
+
         # export
         self._setFilenameAndType(name=filename, filetype=filetype)
         self._export(item=new, folder=foldername)
 
     def _setFilenameAndType(self, name: str, filetype: str):
-        # name it
-        now = datetime.datetime.now()
+        now = datetime.datetime.now()  # name by time now
         filename = str(now.year) + str(now.month) + str(now.day) + \
             '-' + str(now.hour) + str(now.minute) + str(now.second)
         if name == '':
             name = self.name_of_this
         self.filename = name + '-' + filename
-        # what type
-        # XXX, HACK: only json is done, later try other types
         if filetype != "json":
             raise NotImplementedError(
                 "Please use json, other filetypes are not implemented.")
@@ -156,6 +139,6 @@ class AAstock():
         with open(self.filepath, 'w') as f:
             if self.filetype == 'json':
                 f.write(json.dumps(item, indent=1))
-            else:  # XXX, HACK: save as other filetypes
+            else: 
                 raise NotImplementedError(
                     "Please use json, other filetypes are not implemented.")
