@@ -5,10 +5,9 @@ name: Test_VD
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  schedule:
+    # Runs "At 18:00 on every day-of-week from Monday through Friday" (see https://crontab.guru)
+    - cron: '0 18 * * 1-5'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -40,14 +39,14 @@ jobs:
           echo "::set-output name=filepath::$output" 
         id: run
 
-      # send to gist
-      - name: Send to gist
-        uses: exuanbo/actions-deploy-gist@v1
-        with:
-          token: ${{ secrets.GIST_TOKEN }}
-          gist_id: ${{ secrets.GIST_ID }}
-          gist_file_name: ${{ steps.run.outputs.filepath }}
-          file_path: ${{ steps.run.outputs.filepath }}
+      # # send to gist
+      # - name: Send to gist
+      #   uses: exuanbo/actions-deploy-gist@v1
+      #   with:
+      #     token: ${{ secrets.GIST_TOKEN }}
+      #     gist_id: ${{ secrets.GIST_ID }}
+      #     gist_file_name: ${{ steps.run.outputs.filepath }}
+      #     file_path: ${{ steps.run.outputs.filepath }}
 
       # send email, there is some overkill security issues that block the login
       - name: Send mail

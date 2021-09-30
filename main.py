@@ -1,6 +1,6 @@
 import argparse
 import datetime
-from DynamicChart.test import AAstock
+from DynamicChart.final import AAstock
 
 
 help_doc = {
