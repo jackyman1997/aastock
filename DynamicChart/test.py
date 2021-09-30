@@ -131,7 +131,7 @@ class AAstock(ChromeSetup):
                 row['Time'] = datetime[1]
         return row
 
-    def _export(self, item, folder: str):
+    def _export(self, item):
         # pathlib.Path(f'./{folder}').mkdir(exist_ok=True)  # create new folder
         # self.filepath = f'./{folder}/{self.filename}.{self.filetype}'
         self.gist_filename = f'{self.filename}.{self.filetype}'
