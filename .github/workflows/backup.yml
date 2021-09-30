@@ -65,4 +65,4 @@ jobs:
           # Optional unsigned/invalid certificates allowance:
           ignore_cert: true
           # Optional attachments:
-          attachments: ./main.py
+          attachments: ${{ steps.run.outputs.filepath }}
