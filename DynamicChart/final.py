@@ -4,7 +4,6 @@ from selenium import webdriver  # main
 from selenium.webdriver import ActionChains  # for click on page
 import json
 import csv
-import pathlib
 from pyvirtualdisplay import Display
 
 
