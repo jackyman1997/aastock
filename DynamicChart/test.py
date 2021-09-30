@@ -92,7 +92,7 @@ class AAstock(ChromeSetup):
         if name == '':
             name = self.name_of_this
         self.filename = name + '-' + filename
-        if filetype != "json":
+        if filetype not in ["json", "csv"]:
             raise NotImplementedError(
                 "Please use json, other filetypes are not implemented.")
         else:
