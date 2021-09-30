@@ -35,7 +35,7 @@ class AAstock(ChromeSetup):
         }
         super().__init__(headless=headless)  # chrome driver setup
 
-        with Display(visible=False, size=(800, 600)) as disp:  # virture display setup
+        with Display(visible=False, size=(1920, 1080)) as disp:  # virture display setup
 
             with webdriver.Chrome(
                 executable_path=self.chrome_path,
@@ -46,6 +46,8 @@ class AAstock(ChromeSetup):
                 print(self.chart.location, self.chart.size)
                 self.name_of_this = self.driver.find_element_by_xpath( 
                     self.xpaths['Name']).text  # get the name of this future/stock
+
+                self.driver.set_window_size(1080, 840)  # set windows size
 
                 try:  # clicks for ignore night data
                     self._click(self.xpaths['button_nighttime'])
