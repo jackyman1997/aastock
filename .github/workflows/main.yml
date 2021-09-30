@@ -49,7 +49,7 @@ jobs:
           gist_file_name: ${{ steps.run.outputs.filepath }}
           file_path: ${{ steps.run.outputs.filepath }}
 
-      send email, there is some overkill security issues that block the login
+      # send email, there is some overkill security issues that block the login
       - name: Send mail
         uses: dawidd6/action-send-mail@v3
         with:
