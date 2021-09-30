@@ -43,7 +43,7 @@ class AAstock(ChromeSetup):
                 self.driver.get(url)  # start webpage
                 self.chart = self.driver.find_element_by_xpath(
                     self.xpaths['chart'])  # locate dynamic chart, and get size
-                print(self.chart.location, self.chart.size)
+                # print(self.chart.location, self.chart.size)
                 self.name_of_this = self.driver.find_element_by_xpath( 
                     self.xpaths['Name']).text  # get the name of this future/stock
 
@@ -83,6 +83,7 @@ class AAstock(ChromeSetup):
         # export
         self._setFilenameAndType(name=filename, filetype=filetype)
         self._export(item=new, folder=foldername)
+        print(self.filepath)  # for github action get filename
 
     def _setFilenameAndType(self, name: str, filetype: str):
         now = datetime.datetime.now()  # name by time now

@@ -24,9 +24,7 @@ def argparse_to_dict(argparse_namespace: argparse.Namespace) -> dict:
 
 
 def main(*args, **kwargs):
-    print(f'Start at {datetime.datetime.now().strftime("%m%d%Y%H%M%S")}')
     AAstock(**kwargs)
-    print(f'Finish at {datetime.datetime.now().strftime("%m%d%Y%H%M%S")}')
 
 
 if __name__ == "__main__":

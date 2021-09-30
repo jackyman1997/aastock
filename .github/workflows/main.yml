@@ -35,12 +35,34 @@ jobs:
 
       # run main.py
       - name: run main.py
-        run: python main.py --url "http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT"
+        run: |
+          output=$(python main.py --url "http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT" | tail -1)
+          echo "::set-output name=filepath::$output" 
+        id: run
 
-      # # build docker image
-      # - name: build docker image
-      #   run: docker build . -t virtualdisplay:1.0 -f Dockerfile --rm
-
-      # # run docker image
-      # - name: run docker image
-      #   run: docker run --name aastock -p 5000:5000 --rm virtualdisplay:1.0
+      # send email
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          # Required mail server address:
+          server_address: smtp.gmail.com
+          # Required mail server port:
+          server_port: 465
+          # Optional (recommended): mail server username:
+          username: ${{secrets.GMAIL_ADDRESS}}
+          # Optional (recommended) mail server password:
+          password: ${{secrets.GMAIL_PASSWORD}}
+          # Required mail subject:
+          subject: aastock results
+          # Required recipients' addresses:
+          to: jackyman1997@gmail.com
+          # Required sender full name (address can be skipped):
+          from: automated
+          # Optional whether this connection use TLS (default is true if server_port is 465)
+          secure: true
+          # Optional plain body:
+          body: 
+          # Optional unsigned/invalid certificates allowance:
+          ignore_cert: true
+          # Optional attachments:
+          attachments: ${{ steps.grun.outputs.filepath }}
