@@ -35,42 +35,42 @@ class AAstock(ChromeSetup):
         }
         super().__init__(headless=headless)  # chrome driver setup
 
-        # with Display(visible=False, size=(100, 60)) as disp:  # virture display setup
+        with Display(visible=False, size=(100, 60)) as disp:  # virture display setup
 
-        with webdriver.Chrome(
-            executable_path=self.chrome_path,
-            options=self.chrome_options) as self.driver:  # start chrome driver
-            self.driver.get(url)  # start webpage
-            self.chart = self.driver.find_element_by_xpath(
-                self.xpaths['chart'])  # locate dynamic chart, and get size
-            print(self.chart.location, self.chart.size)
-            self.name_of_this = self.driver.find_element_by_xpath( 
-                self.xpaths['Name']).text  # get the name of this future/stock
+            with webdriver.Chrome(
+                executable_path=self.chrome_path,
+                options=self.chrome_options) as self.driver:  # start chrome driver
+                self.driver.get(url)  # start webpage
+                self.chart = self.driver.find_element_by_xpath(
+                    self.xpaths['chart'])  # locate dynamic chart, and get size
+                print(self.chart.location, self.chart.size)
+                self.name_of_this = self.driver.find_element_by_xpath( 
+                    self.xpaths['Name']).text  # get the name of this future/stock
 
-            try:  # clicks for ignore night data
-                self._click(self.xpaths['button_nighttime'])
-            except:
-                pass
+                try:  # clicks for ignore night data
+                    self._click(self.xpaths['button_nighttime'])
+                except:
+                    pass
 
-            # clicks for getting 1 min period
-            self._click(self.xpaths['button_1min'])
-            self._click(self.xpaths['button_zoomout'], n_times=10)
-            self._click(self.xpaths['button_zoomin'])
-            self.driver.execute_script(
-                f'window.scrollTo(0, {self.chart.location["y"]})') # move and capture
+                # clicks for getting 1 min period
+                self._click(self.xpaths['button_1min'])
+                self._click(self.xpaths['button_zoomout'], n_times=10)
+                self._click(self.xpaths['button_zoomin'])
+                self.driver.execute_script(
+                    f'window.scrollTo(0, {self.chart.location["y"]})') # move and capture
 
-            # traverse through the width of the dynamic chart
-            raw = []
-            for offset in range(self.chart.size['width']):
-                self._moveCursor(offset)
-                row = self._captureData()
-                if offset == 0:  # inital capture, XXX: should be better code here
-                    raw.append(row)
-                if raw[-1]['Time'] != row['Time']:  # only store when datetime is different
-                    raw.append(row)
-                # just to check if it is working
-                print(
-                    f"{row} {round(100*(offset+1)/self.chart.size['width'], ndigits=2)}% captured", end='\r')
+                # traverse through the width of the dynamic chart
+                raw = []
+                for offset in range(self.chart.size['width']):
+                    self._moveCursor(offset)
+                    row = self._captureData()
+                    if offset == 0:  # inital capture, XXX: should be better code here
+                        raw.append(row)
+                    if raw[-1]['Time'] != row['Time']:  # only store when datetime is different
+                        raw.append(row)
+                    # just to check if it is working
+                    print(
+                        f"{row} {round(100*(offset+1)/self.chart.size['width'], ndigits=2)}% captured", end='\r')
 
         # data preprocessing, XXX: temporarily codes
         # 1. clean date
