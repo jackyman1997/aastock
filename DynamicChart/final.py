@@ -86,7 +86,7 @@ class AAstock(ChromeSetup):
         print(self.gist_filename)  # for github action get filename
 
     def _setFilenameAndType(self, name: str, filetype: str):
-        filename = datetime.datetime.now().strftime("%m%d%Y%H%M%S")
+        filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         if name == '':
             name = self.name_of_this + "@" + self.date
         self.filename = name + '-' + filename
