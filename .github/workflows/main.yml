@@ -63,7 +63,7 @@ jobs:
           # Required mail subject:
           subject: aastock results
           # Required recipients' addresses:
-          to: jackyman1997@gmail.com
+          to: jackyman1997@gmail.com, Lahaha200903@yahoo.com.hk
           # Required sender full name (address can be skipped):
           from: automated
           # Optional whether this connection use TLS (default is true if server_port is 465)
