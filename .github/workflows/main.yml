@@ -62,10 +62,10 @@ jobs:
           password: ${{secrets.GMAIL_PASSWORD}}
           # Required mail subject:
           subject: aastock results
-          # Required recipients' addresses:
-          to: jackyman1997@gmail.com, Lahaha200903@yahoo.com.hk
+          # Required recipients' addresses Lahaha200903@yahoo.com.hk:
+          to: jackyman1997@gmail.com
           # Required sender full name (address can be skipped):
-          from: automated
+          from: 叫雞AI
           # Optional whether this connection use TLS (default is true if server_port is 465)
           secure: true
           # Optional plain body:
