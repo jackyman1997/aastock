@@ -80,16 +80,15 @@ class AAstock(ChromeSetup):
             print(f'some data is missing, {len(new)}')
 
         # export
+        self.date = newestDate.replace("/", "")  # for naming
         self._setFilenameAndType(name=filename, filetype=filetype)
         self._export(item=new)
         print(self.gist_filename)  # for github action get filename
 
     def _setFilenameAndType(self, name: str, filetype: str):
-        now = datetime.datetime.now()  # name by time now
-        filename = str(now.year) + str(now.month) + str(now.day) + \
-            '-' + str(now.hour) + str(now.minute) + str(now.second)
+        filename = datetime.datetime.now().strftime("%m%d%Y%H%M%S")
         if name == '':
-            name = self.name_of_this
+            name = self.name_of_this + "@" + self.date
         self.filename = name + '-' + filename
         if filetype not in ["json", "csv"]:
             raise NotImplementedError(
