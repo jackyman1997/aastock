@@ -3,7 +3,7 @@ from DynamicChart.final import AAstock
 
 
 help_doc = {
-    "description": "WIP, some general stuff",
+    "description": "WIP, some general stuff.",
     "--url": "the target website, string, a must",
     "--headless": "Selenium webdriver with headless mode, \
         if called, the driver is running in headless mode, default False",
