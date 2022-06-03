@@ -4,4 +4,4 @@ python3 main.py --url "http://www.aastocks.com/tc/stocks/quote/dynamic-chart.asp
 ```
 
 # Update every 60 days
-2
+3
