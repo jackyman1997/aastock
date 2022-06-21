@@ -1,6 +1,6 @@
 import argparse
-from DynamicChart.final import AAstock
-
+from DynamicChart.AastockScraper import AAstock
+from selenium.common.exceptions import NoSuchElementException
 
 help_doc = {
     "description": "WIP, some general stuff.",
@@ -27,4 +27,7 @@ def main(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    main(**argparse_to_dict(flags))
+    try: 
+        main(**argparse_to_dict(flags))
+    except NoSuchElementException: 
+        main(**argparse_to_dict(flags))
