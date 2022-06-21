@@ -1,46 +1,29 @@
-import time
+from .SeleniumWebDriverSetup import ChromeSetup
 import datetime
-import chromedriver_autoinstaller
-from selenium import webdriver # main
-from selenium.webdriver import ActionChains # for click on page
+from selenium import webdriver  # main
+from selenium.webdriver import ActionChains  # for click on page
 import json
-import pathlib
-import functools
-
+import csv
 from pyvirtualdisplay import Display
 
-def onVirtualdisplay(func, useVD: bool=True): 
-    def wrapped(): 
-        display = Display(visible=0, size=(800, 600))
-        display.start()
-        func()
-        display.stop()
-    if useVD:
-        return wrapped
-    return func
 
-class AAstock(): 
+class AAstock(ChromeSetup):
     ''' only minute data for now '''
+
     def __init__(
         self,
-        headless: bool=False, 
-        filename: str='', 
-        filetype: str='json',
-        foldername: str='output'
-        ):
-        # general attr. 
-        self.headless = headless
-        self.filename = filename
-        self.filetype = filetype
-        self.foldername = foldername
-        # xpaths, HACK: it would amazing and handy if there exists an AI to find these out 
+        url: str,
+        headless: bool = False,
+        filename: str = '',
+        filetype: str = 'csv'
+    ):
         self.xpaths = {
             'chart': '//*[@id="stockChart_chart_container"]',
-            'button_nighttime': '//*[@id="AHFTControl"]/div[2]', 
-            'button_1min': '//*[@id="jsPeriodPanel"]/div[1]', 
-            'button_zoomout': '//*[@id="dcDrawingTools2"]/div[2]', 
+            'button_nighttime': '//*[@id="AHFTControl"]/div[2]',
+            'button_1min': '//*[@id="jsPeriodPanel"]/div[1]',
+            'button_zoomout': '//*[@id="dcDrawingTools2"]/div[2]',
             'button_zoomin': '//*[@id="dcDrawingTools2"]/div[1]/div',
-            'Name': '//*[@id="divLabelS"]', 
+            'Name': '//*[@id="divLabelS"]',
             'Datetime': '//*[@id="divLabelD"]',
             'O': '//*[@id="divLabelO"]',
             'H': '//*[@id="divLabelH"]',
@@ -49,119 +32,116 @@ class AAstock():
             'Turn': '//*[@id="divLabelTurn"]',
             'Vol': '//*[@id="divLabelVol"]'
         }
-        # driver setup
-        # HACK: find out how to use PyVirtualDisplay to run headless webdriver in server
-        # https://unix.stackexchange.com/questions/516212/run-selenium-python-script-without-headless-mode-on-linux-server
-        chromedriver_autoinstaller.install() # auto install 
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument('--ignore-certificate-errors-spki-list')
-        self.options.add_argument('--ignore-ssl-errors')
-        self.options.add_argument('--start-maximized') # not working in MacOS X
+        super().__init__(headless=headless)  # chrome driver setup
 
-    @onVirtualdisplay
-    def __call__(
-        self, 
-        url: str, 
-        return_dict: bool=False
-        ):
-        with webdriver.Chrome(options=self.options) as self.driver: 
-            # start webpage
-            self.driver.get(url)
-            # locate dynamic chart, and get size
-            self.chart = self.driver.find_element_by_xpath(self.xpaths['chart'])
-            print(self.chart.location, self.chart.size)
-            # get the name of this future/stock
-            self.name_of_this = self.driver.find_element_by_xpath(self.xpaths['Name']).text
-            # essential clicks for 1 min data
-            # XXX: here these clicks are mainly for getting 1 min data, how to generalise them is still a mystery
-            try: 
-                self._click(self.xpaths['button_nighttime'])
-            except:
-                pass
-            self._click(self.xpaths['button_1min'])
-            self._click(self.xpaths['button_zoomout'], n_times=10)
-            self._click(self.xpaths['button_zoomin'])
-            # move and capture
-            # ActionChains(self.driver).move_to_element(self.chart).perform()
-            self.driver.execute_script(f'window.scrollTo(0, {self.chart.location["y"]})')  
-            raw = []
-            for offset in range(self.chart.size['width']): # traverse through the width of the dynamic chart
-                self._moveCursor(offset)
-                row = self._captureData()
-                if offset == 0: # inital capture, XXX: should be better code here
-                    raw.append(row)
-                if raw[-1]['Time'] != row['Time']: # only store when datetime is different
-                    raw.append(row)
-                print(f"{row} {round(100*(offset+1)/self.chart.size['width'], ndigits=2)}% captured", end='\r') # just to check if it is working
-        # data preprocessing, XXX: temporarily codes 
+        with Display(visible=False, size=(800, 600)) as disp:  # virture display setup
+
+            with webdriver.Chrome(
+                executable_path=self.chrome_path,
+                options=self.chrome_options) as self.driver:  # start chrome driver
+                self.driver.get(url)  # start webpage
+                self.chart = self.driver.find_element_by_xpath(
+                    self.xpaths['chart'])  # locate dynamic chart, and get size
+                # print(self.chart.location, self.chart.size)
+                self.name_of_this = self.driver.find_element_by_xpath( 
+                    self.xpaths['Name']).text  # get the name of this future/stock
+
+                try:  # clicks for ignore night data
+                    self._click(self.xpaths['button_nighttime'])
+                except:
+                    pass
+
+                # clicks for getting 1 min period
+                self._click(self.xpaths['button_1min'])
+                self._click(self.xpaths['button_zoomout'], n_times=10)
+                self._click(self.xpaths['button_zoomin'])
+                self.driver.execute_script(
+                    f'window.scrollTo(0, {self.chart.location["y"]})') # move and capture
+
+                # traverse through the width of the dynamic chart
+                raw = []
+                for offset in range(self.chart.size['width']):
+                    self._moveCursor(offset)
+                    row = self._captureData()
+                    if offset == 0:  # inital capture, XXX: should be better code here
+                        raw.append(row)
+                    if raw[-1]['Time'] != row['Time']:  # only store when datetime is different
+                        raw.append(row)
+
+        # data preprocessing, XXX: temporarily codes
         # 1. clean date
-        newestDate = raw[-1]['Date'] # last item must be the newere date
+        newestDate = raw[-1]['Date']  # last item must be the newere date
         new = [row for row in raw if row['Date'] == newestDate]
         # 2. remove duplicate, after some tests, sometimes the last item repeated at the first location of the last
-        if new[0]['Time'] == '16:30' or new[0]['Time'] == '16:00': 
+        if new[0]['Time'] == '16:30' or new[0]['Time'] == '16:00':
             new.pop(0)
         # 3. check sum, for future -> 377 elements in list, for stocks -> 330
-        if len(new) != 377 and len(new) != 330: 
+        if len(new) != 377 and len(new) != 330:
             print(f'some data is missing, {len(new)}')
-        # export or return 
-        if return_dict: 
-            return new
-        else: 
-            self._setFilenameAndType(name=self.filename, filetype=self.filetype)
-            self._export(item=new, folder=self.foldername)
-  
-    def _setFilenameAndType(self, name: str, filetype: str): 
-        # name it
-        now = datetime.datetime.now()
-        filename = str(now.year) + str(now.month) + str(now.day) + '-' + str(now.hour) + str(now.minute) + str(now.second) 
+
+        # export
+        self.date = newestDate.replace("/", "")  # for naming
+        self._setFilenameAndType(name=filename, filetype=filetype)
+        self._export(item=new)
+        print(self.gist_filename)  # for github action get filename
+
+    def _setFilenameAndType(self, name: str, filetype: str):
+        filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         if name == '':
-            name = self.name_of_this
+            name = self.name_of_this + "@" + self.date
         self.filename = name + '-' + filename
-        # what type
-        # XXX, HACK: only json is done, later try other types 
-        if filetype != "json": 
-            raise NotImplementedError("Please use json, other filetypes are not implemented.")
+        if filetype not in ["json", "csv"]:
+            raise NotImplementedError(
+                "Please use json, other filetypes are not implemented.")
         else:
             self.filetype = filetype
 
-    def _click(self, xpath: str, n_times: int=1): 
-        for _ in range(n_times): 
-            ActionChains(self.driver).click(self.driver.find_element_by_xpath(xpath)).perform()
+    def _click(self, xpath: str, n_times: int = 1):
+        for _ in range(n_times):
+            ActionChains(self.driver).click(
+                self.driver.find_element_by_xpath(xpath)).perform()
 
-    def _moveCursor(self, offset): 
+    def _moveCursor(self, offset):
         ActionChains(self.driver).move_to_element_with_offset(
-            self.chart, 
-            xoffset=offset, 
+            self.chart,
+            xoffset=offset,
             yoffset=5
-            ).click().perform()
+        ).click().perform()
 
-    def _captureData(self) -> dict: 
+    def _captureData(self) -> dict:
         row = {}
-        for key in ['Datetime', 'O', 'H', 'L', 'C', 'Turn', 'Vol']: 
-            if key != 'Datetime': 
-                row[key] = self.driver.find_element_by_xpath(self.xpaths[key]).text
-                if 'K' in row[key]: 
-                    row[key] = round(float(row[key].replace('K', ''))*1000, ndigits=2)
-                elif 'M' in row[key]: 
-                    row[key] = round(float(row[key].replace('M', ''))*1000000, ndigits=2)
-                else: 
+        for key in ['Datetime', 'O', 'H', 'L', 'C', 'Turn', 'Vol']:
+            if key != 'Datetime':
+                row[key] = self.driver.find_element_by_xpath(
+                    self.xpaths[key]).text
+                if 'K' in row[key]:
+                    row[key] = round(
+                        float(row[key].replace('K', ''))*1000, ndigits=2)
+                elif 'M' in row[key]:
+                    row[key] = round(
+                        float(row[key].replace('M', ''))*1000000, ndigits=2)
+                else:
                     row[key] = float(row[key])
-            else: 
-                datetime = self.driver.find_element_by_xpath(self.xpaths[key]).text.split()
+            else:
+                datetime = self.driver.find_element_by_xpath(
+                    self.xpaths[key]).text.split()
                 row['Date'] = datetime[0]
                 row['Time'] = datetime[1]
         return row
-        
-    def _export(self, item, folder: str): 
-        pathlib.Path(f'./{folder}').mkdir(exist_ok=True) # create new folder
-        with open(f'./{folder}/{self.filename}.{self.filetype}', 'w') as f:
-            if self.filetype == 'json': 
-                f.write(json.dumps(item, indent=4))
-            else: # XXX, HACK: save as other filetypes 
-                raise NotImplementedError("Please use json, other filetypes are not implemented.")
 
-if __name__ == "__main__": 
-    params = {
-        'url': 'http://www.aastocks.com/tc/stocks/quote/dynamic-chart.aspx?index=221000.FT'
-    }
-    scarper = AAstock()
+    def _export(self, item):
+        # pathlib.Path(f'./{folder}').mkdir(exist_ok=True)  # create new folder
+        # self.filepath = f'./{folder}/{self.filename}.{self.filetype}'
+        self.gist_filename = f'{self.filename}.{self.filetype}'
+        if self.filetype == 'json':
+            with open(self.gist_filename, 'w') as f:
+                f.write(json.dumps(item, indent=1))
+        elif self.filetype == 'csv':
+            keys = item[0].keys()
+            with open(self.gist_filename, 'w', newline='') as output_file:
+                dict_writer = csv.DictWriter(output_file, keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(item)
+        else: 
+            raise NotImplementedError(
+                "Please use json, other filetypes are not implemented.")
